@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+import subprocess
+import argparse
+
+def nmap_full_scan(target, ports, output_file):
+    """
+    Perform a comprehensive Nmap scan for a specific target URL and port range, and save the results to a user-specified text file.
+    - Host Discovery
+    - OS Detection
+    - Service Version Detection
+    - Vulnerability Scanning
+    - Traceroute
+    - Custom Port Range (e.g., 80-443, 1-1024)
+    - Increased Verbosity (-vv)
+    - Timing Template (-T4)
+    """
+    try:
+        # Construct the Nmap command for a full scan with output to file and increased verbosity
+        command = [
+            "nmap", 
+            "-A",  # Aggressive scan (OS detection, version detection, script scanning, traceroute)
+            "-O",  # OS detection
+            "-sV",  # Service version detection
+            "--script=default,vuln",  # Run default and vulnerability scripts
+            "-p", ports,  # User-defined port range or "all" ports (using -p)
+            "--traceroute",  # Perform traceroute
+            "-vv",  # Increased verbosity
+            "-T4",  # Timing template for faster scans
+            "-oN", output_file,  # Save results to a text file
+            target  # Target URL or IP address
+        ]
+        
+        print(f"Scanning {target} for ports {ports}...\nThis may take some time. Please wait...")
+
+        # Run the Nmap command and capture the output
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+
+        # Only print the completion message once
+        print(f"\nPort scan completed. Results saved to {output_file}")
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Error running Nmap: {e.stderr}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(
+        description="CLI tool for performing a full Nmap scan with a URL target, custom port range, verbosity, timing template, and saving results to a user-specified file."
+    )
+    parser.add_argument(
+        "-u",  # Use -u for the target URL or IP
+        "--url",
+        required=True,
+        help="Target URL or IP address (e.g., http://example.com or 192.168.1.1)."
+    )
+    parser.add_argument(
+        "-p",  # Use -p for port range (instead of --ports)
+        required=False,
+        help="Port range to scan (e.g., 80-443, 1-1024). If not specified, all ports will be scanned."
+    )
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # Generate the output file name based on the target URL or IP
+    target_url = args.url.replace(".", "_").replace("-", "_").replace("http://", "").replace("https://", "").replace("/", "")  # Replace dots with underscores for valid filename
+    output_file = f"scan_results_{target_url}.txt"
+
+    # Check if a port range is provided; if not, set it to scan all ports
+    if args.p:
+        ports = args.p
+    else:
+        ports = "1-65535"  # All ports (1-65535)
+
+    # Run the full Nmap scan with user-defined ports and save to the generated output file
+    nmap_full_scan(args.url, ports, output_file)
+
+if __name__ == "__main__":
+    main()
