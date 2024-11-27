@@ -9,6 +9,9 @@ To use this tool, you can either clone the repository or download the Python fil
 Requirements
 - Python 3.x
 - Nmap installed on your machine
+- subprocess module
+- argparse module
+
 
 Usage
 
